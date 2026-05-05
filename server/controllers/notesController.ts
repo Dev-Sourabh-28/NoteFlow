@@ -29,3 +29,23 @@ export const updateNote = async(req: AuthRequest, res: Response) => {
 
     res.json(note);
 }
+
+export const deleteNote = async(req: AuthRequest, res: Response) => {
+    try {
+        const note = await Note.findById(req.params.id);
+
+        if(!note){
+            return res.status(404).json({msg: "Note not found"});
+        }
+
+        if(note.userId !== req.user.id){
+            return res.status(403).json({msg: "Unauthorized"});
+        }
+
+        await Note.findByIdAndDelete(req.params.id);
+
+        res.json({msg: "Note deleted successfully"});
+    } catch (error) {
+        res.status(500).json({msg: "Server error"});
+    }
+}
