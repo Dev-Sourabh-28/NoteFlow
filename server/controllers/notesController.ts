@@ -31,8 +31,11 @@ export const updateNote = async(req: AuthRequest, res: Response) => {
 }
 
 export const deleteNote = async(req: AuthRequest, res: Response) => {
+    
     try {
+             
         const note = await Note.findById(req.params.id);
+        
 
         if(!note){
             return res.status(404).json({msg: "Note not found"});
