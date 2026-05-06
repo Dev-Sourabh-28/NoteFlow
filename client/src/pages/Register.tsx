@@ -1,139 +1,254 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { Eye, EyeOff, ChevronRight, User, Mail, Lock, Check } from "lucide-react";
 import API from "../services/api";
 
 interface FormData {
-  name: string;
-  email: string;
-  password: string;
+    name: string;
+    email: string;
+    password: string;
+    username: string;
+    gender: string;
+    avatar: string;
 }
 
 export default function Register() {
-  const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [form, setForm] = useState<FormData>({ name: "", email: "", password: "" });
+    const navigate = useNavigate();
+    const [step, setStep] = useState(1);
+    const [loading, setLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const [form, setForm] = useState<FormData>({
+        name: "",
+        username: "",
+        email: "",
+        password: "",
+        gender: "Man", // Default selection
+        avatar: ""
+    });
 
-  const handleSubmit = async () => {
-    try {
-      setLoading(true);
-      await API.post("/auth/register", form);
-      alert("Registered Successfully");
-      navigate("/");
-    } catch (error: any) {
-      alert(error.response?.data?.msg || "Error");
-    } finally {
-      setLoading(false);
+    const updateForm = (field: keyof FormData, value: string) => {
+        setForm(prev => ({ ...prev, [field]: value }));
+    };
+
+    const nextStep = () => {
+        if (step === 1) {
+            if (!form.name || !form.email || !form.password) {
+                return alert("Please fill in all mandatory fields")
+            }
+        }
+        setStep(prev => prev + 1);
     }
-  };
 
-  return (
-    <>
-      {/* Ensure the font is imported */}
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap');`}</style>
+    const prevStep = () => setStep(prev => prev - 1);
 
-      <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0b0f1a] font-['Sora'] antialiased">
-        {/* Background Decorative Orbs */}
-        <div className="pointer-events-none absolute -right-[150px] -top-[150px] h-[600px] w-[600px] rounded-full bg-[radial-gradient(circle,rgba(236,72,153,0.22)_0%,transparent_70%)]" />
-        <div className="pointer-events-none absolute -left-[100px] -bottom-[120px] h-[500px] w-[500px] rounded-full bg-[radial-gradient(circle,rgba(99,102,241,0.18)_0%,transparent_70%)]" />
-        <div className="pointer-events-none absolute left-[10%] top-[40%] h-[280px] w-[280px] rounded-full bg-[radial-gradient(circle,rgba(34,211,238,0.1)_0%,transparent_70%)]" />
+    const handleSubmit = async () => {
+        try {
+            setLoading(true);
+            await API.post("/auth/register", form);
+            alert("Account created successfully!");
+            navigate("/");
+        } catch (error: any) {
+            alert(error.response?.data?.msg || "Registration failed");
+        } finally {
+            setLoading(false);
+        }
+    }
 
-        {/* Glass Card */}
-        <div className="relative z-10 w-full max-w-[420px] animate-[slideUp_0.5s_cubic-bezier(.22,.68,0,1.2)_both] rounded-[24px] border border-white/10 bg-white/5 p-10 md:p-12 text-white shadow-[0_8px_32px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.1)] backdrop-blur-[24px]">
-          
-          {/* Logo Mark */}
-          <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-[14px] bg-gradient-to-br from-[#ec4899] to-[#6366f1] text-[22px] shadow-[0_4px_20px_rgba(236,72,153,0.4)]">
-            ✦
-          </div>
+    // Curated Avatar List for better gender accuracy
+    const allAvatars = [
+        // MAN SEEDS
+        { id: 'm1', gender: 'Man', url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Jack&top[]=shortCurly&facialHairProbability=100' },
+        { id: 'm2', gender: 'Man', url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Charlie&top[]=turban' },
+        { id: 'm3', gender: 'Man', url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=George&top[]=sides' },
 
-          <h1 className="mb-1.5 text-[28px] font-bold tracking-tight">Create account</h1>
-          <p className="mb-8 text-sm text-white/45">Join us — it only takes a minute</p>
+        // WOMAN SEEDS
+        { id: 'w1', gender: 'Woman', url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sasha&top[]=bob' },
+        { id: 'w2', gender: 'Woman', url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Willow&top[]=curvy' },
+        { id: 'w3', gender: 'Woman', url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Abby&top[]=curly' },
 
-          <div className="space-y-5">
-            {/* Name Field */}
-            <div>
-              <label className="mb-2 block text-[12px] font-medium uppercase tracking-[0.6px] text-white/50">Full Name</label>
-              <input
-                type="text"
-                placeholder="Jane Doe"
-                className="w-full rounded-xl border border-white/12 bg-white/5 px-4 py-[13px] font-['Sora'] text-sm text-white outline-none transition-all placeholder:text-white/25 focus:border-[#ec4899]/60 focus:bg-white/10 focus:ring-4 focus:ring-[#ec4899]/15"
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-              />
-            </div>
+        // OTHER / BOT SEEDS
+        { id: 'o1', gender: 'Other', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=Dusty' },
+        { id: 'o2', gender: 'Other', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=Buck' },
+        { id: 'o3', gender: 'Other', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=Gizmo' },
+        { id: 'o4', gender: 'Other', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=Zelda' },
+    ];
 
-            {/* Email Field */}
-            <div>
-              <label className="mb-2 block text-[12px] font-medium uppercase tracking-[0.6px] text-white/50">Email</label>
-              <input
-                type="email"
-                placeholder="you@example.com"
-                className="w-full rounded-xl border border-white/12 bg-white/5 px-4 py-[13px] font-['Sora'] text-sm text-white outline-none transition-all placeholder:text-white/25 focus:border-[#ec4899]/60 focus:bg-white/10 focus:ring-4 focus:ring-[#ec4899]/15"
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
-              />
-            </div>
+    // Filter avatars based on selected gender
+    const filteredAvatars = allAvatars.filter(av => av.gender === form.gender);
 
-            {/* Password Field */}
-            <div className="relative">
-              <label className="mb-2 block text-[12px] font-medium uppercase tracking-[0.6px] text-white/50">Password</label>
-              <div className="relative">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
-                  className="w-full rounded-xl border border-white/12 bg-white/5 py-[13px] pl-4 pr-11 font-['Sora'] text-sm text-white outline-none transition-all placeholder:text-white/25 focus:border-[#ec4899]/60 focus:bg-white/10 focus:ring-4 focus:ring-[#ec4899]/15"
-                  onChange={(e) => setForm({ ...form, password: e.target.value })}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-lg text-white/40 transition-colors hover:text-white/70"
-                >
-                  {showPassword ? "🙈" : "👁"}
-                </button>
-              </div>
+    return (
+        <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0b0f1a] font-['Sora'] antialiased p-4">
+            <style>{`@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap');`}</style>
 
-              {/* Strength Bar */}
-              {form.password && (
-                <div className="mt-3 flex gap-1">
-                  {[1, 2, 3, 4].map((i) => {
-                    const isActive = form.password.length >= i * 3;
-                    const colors = ["#f87171", "#fb923c", "#facc15", "#4ade80"];
-                    return (
-                      <div
-                        key={i}
-                        className="h-[3px] flex-1 rounded-full transition-colors duration-300"
-                        style={{ background: isActive ? colors[i - 1] : "rgba(255,255,255,0.1)" }}
-                      />
-                    );
-                  })}
+            {/* Decorative Orbs */}
+            <div className="pointer-events-none absolute -right-[150px] -top-[150px] h-[600px] w-[600px] rounded-full bg-[radial-gradient(circle,rgba(236,72,153,0.15)_0%,transparent_70%)]" />
+            <div className="pointer-events-none absolute -left-[100px] -bottom-[120px] h-[500px] w-[500px] rounded-full bg-[radial-gradient(circle,rgba(99,102,241,0.15)_0%,transparent_70%)]" />
+
+            <div className="relative z-10 flex h-[850px] w-full max-w-[1100px] overflow-hidden rounded-[40px] bg-white shadow-[0_32px_64px_-16px_rgba(0,0,0,0.5)]">
+
+                {/* LEFT PANEL */}
+                <div className="flex w-full flex-col p-12 lg:w-1/2 overflow-y-auto">
+
+                    <div className="mb-8 flex items-center gap-2">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white">✦</div>
+                        <span className="text-xl font-bold tracking-tight text-slate-800">NoteFlow</span>
+                    </div>
+
+                    <div className="flex-1">
+                        {step === 1 && (
+                            <div className="animate-in fade-in slide-in-from-right-4 duration-500">
+                                <h1 className="text-3xl font-extrabold text-slate-900">Create Account</h1>
+                                <p className="mt-2 text-slate-500">Step 1 — Let's start with the basics</p>
+
+                                <div className="mt-8 space-y-4">
+                                    {/* Name & Username Row */}
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="relative">
+                                            <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                                            <input
+                                                placeholder="Full Name"
+                                                className="w-full rounded-2xl bg-slate-100 py-3.5 pl-12 pr-4 outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                                                onChange={(e) => updateForm('name', e.target.value)}
+                                            />
+                                        </div>
+                                        <input
+                                            placeholder="Username"
+                                            className="w-full rounded-2xl bg-slate-100 px-5 py-3.5 outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                                            onChange={(e) => updateForm('username', e.target.value)}
+                                        />
+                                    </div>
+
+                                    {/* Email */}
+                                    <div className="relative">
+                                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                                        <input
+                                            type="email"
+                                            placeholder="Email Address"
+                                            className="w-full rounded-2xl bg-slate-100 py-3.5 pl-12 pr-4 outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                                            onChange={(e) => updateForm('email', e.target.value)}
+                                        />
+                                    </div>
+
+                                    {/* Password */}
+                                    <div className="relative">
+                                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                                        <input
+                                            type={showPassword ? "text" : "password"}
+                                            placeholder="Password"
+                                            className="w-full rounded-2xl bg-slate-100 py-3.5 pl-12 pr-12 outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                                            onChange={(e) => updateForm('password', e.target.value)}
+                                        />
+                                        <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">
+                                            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                        </button>
+                                    </div>
+
+                                    {/* GENDER PICKER */}
+                                    <div className="pt-2">
+                                        <label className="text-[13px] font-bold uppercase tracking-wider text-slate-400">Identity</label>
+                                        <div className="mt-3 flex gap-3">
+                                            {['Man', 'Woman', 'Other'].map((g) => (
+                                                <button
+                                                    key={g}
+                                                    type="button"
+                                                    onClick={() => {
+                                                        // We update gender AND reset avatar so they have to pick from the new filtered list
+                                                        setForm({ ...form, gender: g, avatar: "" });
+                                                    }}
+                                                    className={`flex-1 rounded-xl py-3 text-sm font-bold transition-all ${form.gender === g
+                                                            ? 'bg-slate-900 text-white shadow-lg'
+                                                            : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                                                        }`}
+                                                >
+                                                    {g}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* FILTERED AVATAR PICKER */}
+                                    <div className="pt-2">
+                                        <label className="text-[13px] font-bold uppercase tracking-wider text-slate-400">Choose your Avatar</label>
+                                        <div className="mt-3 flex flex-wrap gap-4">
+                                            {filteredAvatars.map((av) => (
+                                                <button
+                                                    key={av.id}
+                                                    type="button"
+                                                    onClick={() => updateForm('avatar', av.url)}
+                                                    className={`relative h-14 w-14 rounded-full border-2 transition-all p-0.5 ${form.avatar === av.url ? 'border-indigo-600 scale-110 shadow-md' : 'border-transparent bg-slate-100'
+                                                        }`}
+                                                >
+                                                    <img src={av.url} alt="avatar" className="h-full w-full rounded-full" />
+                                                    {form.avatar === av.url && (
+                                                        <div className="absolute -right-1 -top-1 rounded-full bg-indigo-600 p-0.5 text-white">
+                                                            <Check size={10} strokeWidth={4} />
+                                                        </div>
+                                                    )}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <button
+                                    onClick={nextStep}
+                                    className="mt-8 flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-900 py-4 font-bold text-white transition-all hover:bg-indigo-600 shadow-xl shadow-indigo-100"
+                                >
+                                    Next Step <ChevronRight size={18} />
+                                </button>
+                            </div>
+                        )}
+
+                        {/* Step 2 & 3 content remains the same as your provided code */}
+                        {step === 2 && (
+                            <div className="animate-in fade-in slide-in-from-right-4 duration-500">
+                                <h1 className="text-3xl font-extrabold text-slate-900">Tell us more</h1>
+                                <p className="mt-2 text-slate-500">Step 2 of 3 — How will you use NoteFlow?</p>
+                                <div className="mt-10 grid grid-cols-1 gap-4">
+                                    {['Personal Use', 'Work/Business', 'Education'].map((option) => (
+                                        <button
+                                            key={option}
+                                            className="w-full p-6 text-left rounded-2xl border-2 border-slate-100 hover:border-indigo-500 hover:bg-indigo-50 transition-all font-bold"
+                                            onClick={nextStep}
+                                        >
+                                            {option}
+                                        </button>
+                                    ))}
+                                </div>
+                                <button onClick={prevStep} className="mt-6 text-slate-400 font-medium">Go Back</button>
+                            </div>
+                        )}
+
+                        {step === 3 && (
+                            <div className="animate-in fade-in slide-in-from-right-4 duration-500 text-center">
+                                <h1 className="text-3xl font-extrabold text-slate-900">All set!</h1>
+                                <p className="mt-2 text-slate-500">Ready to create your first note?</p>
+                                <button
+                                    onClick={handleSubmit}
+                                    disabled={loading}
+                                    className="mt-10 w-full rounded-2xl bg-indigo-600 py-4 font-bold text-white shadow-lg shadow-indigo-200"
+                                >
+                                    {loading ? "Creating Account..." : "Finish & Start Flowing"}
+                                </button>
+                                <button onClick={prevStep} className="mt-4 block w-full text-slate-400">Wait, I missed something</button>
+                            </div>
+                        )}
+                    </div>
+
+                    <p className="mt-8 text-center text-sm text-slate-500">
+                        Already have an account? <Link to="/" className="font-bold text-indigo-600">Sign in</Link>
+                    </p>
                 </div>
-              )}
+
+                {/* RIGHT PANEL */}
+                <div className="relative hidden w-1/2 lg:block">
+                    <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=2071&auto=format&fit=crop" className="h-full w-full object-cover" alt="Workspace" />
+                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-purple-900/40 backdrop-blur-[2px]" />
+                    <div className="absolute bottom-12 left-12 right-12 rounded-[32px] border border-white/20 bg-white/10 p-8 text-white backdrop-blur-xl">
+                        <h3 className="text-2xl font-bold">"The best way to predict the future is to create it."</h3>
+                    </div>
+                </div>
             </div>
-          </div>
-
-          {/* Submit Button */}
-          <button
-            onClick={handleSubmit}
-            disabled={loading}
-            className="mt-8 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-[#ec4899] to-[#8b5cf6] py-3.5 font-['Sora'] text-[15px] font-semibold text-white shadow-[0_4px_20px_rgba(236,72,153,0.35)] transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_28px_rgba(236,72,153,0.5)] disabled:cursor-not-allowed disabled:opacity-70"
-          >
-            {loading ? (
-              <>
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                Creating account...
-              </>
-            ) : (
-              "Create Account"
-            )}
-          </button>
-
-          <p className="mt-6 text-center text-[13px] text-white/40">
-            Already have an account?{" "}
-            <Link to="/" className="font-medium text-[#f472b6] hover:text-[#fb7185]">
-              Sign in
-            </Link>
-          </p>
         </div>
-      </div>
-    </>
-  );
+    );
 }

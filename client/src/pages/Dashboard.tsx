@@ -212,13 +212,13 @@ export default function Dashboard() {
 
         {/* Editor Area */}
         <main className={`relative flex flex-1 flex-col p-8 transition-colors duration-300 backdrop-blur-sm ${dark ? "bg-white/[0.01]" : "bg-white/50"}`}>
-          {/* {isSaving && (
+           {isSaving && (
             <span className={`absolute top-4 right-6 rounded-full border px-2.5 py-0.5 text-[11px] font-medium transition-all ${
               dark ? "border-green-400/20 bg-green-400/10 text-green-400" : "border-green-600/20 bg-green-600/10 text-green-700"
             }`}>
               ● Saved
             </span>
-          )} */}
+          )} 
 
           {activeNote ? (
             <div className="flex h-full flex-col gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300">

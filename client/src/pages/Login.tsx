@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { Eye, EyeOff, Mail, Lock, LogIn } from "lucide-react";
 import API from "../services/api";
 
 interface LoginData {
@@ -27,79 +28,108 @@ export default function Login() {
   };
 
   return (
-    <>
-      {/* Keeping the font import */}
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#eef0f5] font-['Sora'] antialiased p-4">
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap');`}</style>
+      
+      {/* Background Decorative Orbs (Optional, kept subtle) */}
+      <div className="pointer-events-none absolute -right-[150px] -top-[150px] h-[600px] w-[600px] rounded-full bg-[radial-gradient(circle,rgba(99,102,241,0.1)_0%,transparent_70%)]" />
 
-      <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0b0f1a] font-['Sora'] antialiased">
-        {/* Background Decorative Orbs */}
-        <div className="pointer-events-none absolute -left-[150px] -top-[150px] h-[600px] w-[600px] rounded-full bg-[radial-gradient(circle,rgba(99,102,241,0.25)_0%,transparent_70%)]" />
-        <div className="pointer-events-none absolute -right-[100px] -bottom-[120px] h-[500px] w-[500px] rounded-full bg-[radial-gradient(circle,rgba(236,72,153,0.18)_0%,transparent_70%)]" />
-        <div className="pointer-events-none absolute left-[60%] top-1/2 h-[300px] w-[300px] -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(34,211,238,0.12)_0%,transparent_70%)]" />
-
-        {/* Glass Card */}
-        <div className="relative z-10 w-full max-w-[420px] animate-[slideUp_0.5s_cubic-bezier(.22,.68,0,1.2)_both] rounded-[24px] border border-white/10 bg-white/5 p-10 md:p-12 text-white shadow-[0_8px_32px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.1)] backdrop-blur-[24px]">
+      {/* Main Container: Split Pane */}
+      <div className="relative z-10 flex h-[750px] w-full max-w-[1000px] overflow-hidden rounded-[40px] bg-white shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)]">
+        
+        {/* LEFT PANEL: Form logic */}
+        <div className="flex w-full flex-col p-12 lg:w-1/2 justify-center">
           
-          {/* Logo Mark */}
-          <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-[14px] bg-gradient-to-br from-[#6366f1] to-[#ec4899] text-[22px] shadow-[0_4px_20px_rgba(99,102,241,0.4)]">
-            ✦
+          {/* Brand Logo */}
+          <div className="mb-12 flex items-center gap-2">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-200">✦</div>
+            <span className="text-xl font-bold tracking-tight text-slate-800">NoteFlow</span>
           </div>
 
-          <h1 className="mb-1.5 text-[28px] font-bold tracking-tight">Welcome back</h1>
-          <p className="mb-8 text-sm text-white/45">Sign in to your account to continue</p>
+          <div>
+            <h1 className="text-3xl font-extrabold text-slate-900">Welcome back</h1>
+            <p className="mt-2 text-slate-500">Please enter your details to sign in.</p>
 
-          {/* Form */}
-          <div className="space-y-5">
-            <div>
-              <label className="mb-2 block text-[12px] font-medium uppercase tracking-[0.6px] text-white/50">Email</label>
-              <input
-                type="email"
-                placeholder="you@example.com"
-                className="w-full rounded-xl border border-white/12 bg-white/5 px-4 py-[13px] font-['Sora'] text-sm text-white outline-none transition-all placeholder:text-white/25 focus:border-indigo-500/60 focus:bg-white/10 focus:ring-4 focus:ring-indigo-500/15"
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
-              />
-            </div>
-
-            <div>
-              <label className="mb-2 block text-[12px] font-medium uppercase tracking-[0.6px] text-white/50">Password</label>
+            <div className="mt-10 space-y-5">
+              {/* Email Field */}
               <div className="relative">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
-                  className="w-full rounded-xl border border-white/12 bg-white/5 py-[13px] pl-4 pr-11 font-['Sora'] text-sm text-white outline-none transition-all placeholder:text-white/25 focus:border-indigo-500/60 focus:bg-white/10 focus:ring-4 focus:ring-indigo-500/15"
-                  onChange={(e) => setForm({ ...form, password: e.target.value })}
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                <input 
+                  type="email"
+                  placeholder="Email address" 
+                  className="w-full rounded-2xl bg-slate-100 py-4 pl-12 pr-4 outline-none transition-all focus:bg-white focus:ring-2 focus:ring-indigo-500/20"
+                  onChange={(e) => setForm({...form, email: e.target.value})}
                 />
-                <button
+              </div>
+
+              {/* Password Field */}
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                <input 
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Password" 
+                  className="w-full rounded-2xl bg-slate-100 py-4 pl-12 pr-12 outline-none transition-all focus:bg-white focus:ring-2 focus:ring-indigo-500/20"
+                  onChange={(e) => setForm({...form, password: e.target.value})}
+                />
+                <button 
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-lg text-white/40 transition-colors hover:text-white/70"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
                 >
-                  {showPassword ? "🙈" : "👁"}
+                  {showPassword ? <EyeOff size={18}/> : <Eye size={18}/>}
                 </button>
               </div>
+
+              <div className="flex items-center justify-between px-1">
+                <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
+                  <input type="checkbox" className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" />
+                  Remember me
+                </label>
+                <a href="#" className="text-sm font-semibold text-indigo-600 hover:text-indigo-500">Forgot password?</a>
+              </div>
             </div>
+
+            <button
+              onClick={handleSubmit}
+              disabled={loading}
+              className="mt-10 flex w-full items-center justify-center gap-3 rounded-2xl bg-slate-900 py-4 font-bold text-white transition-all hover:bg-indigo-600 active:scale-[0.98] disabled:opacity-70 shadow-xl shadow-indigo-100"
+            >
+              {loading ? (
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+              ) : (
+                <><LogIn size={20} /> Sign In</>
+              )}
+            </button>
           </div>
 
-          <button
-            onClick={handleSubmit}
-            disabled={loading}
-            className="mt-8 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] py-3.5 font-['Sora'] text-[15px] font-semibold text-white shadow-[0_4px_20px_rgba(99,102,241,0.35)] transition-all hover:-translate-y-0.5 hover:shadow-[0_8px_28px_rgba(99,102,241,0.5)] disabled:cursor-not-allowed disabled:opacity-70"
-          >
-            {loading ? (
-              <><div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" /> Signing in...</>
-            ) : (
-              "Sign In"
-            )}
-          </button>
-
-          <p className="mt-6 text-center text-[13px] text-white/40">
-            Don't have an account?{" "}
-            <Link to="/register" className="font-medium text-[#818cf8] hover:text-[#a5b4fc]">
-              Create one
-            </Link>
+          <p className="mt-8 text-center text-sm text-slate-500">
+            Don't have an account? <Link to="/register" className="font-bold text-indigo-600">Join NoteFlow</Link>
           </p>
         </div>
+
+        {/* RIGHT PANEL: Visual representation */}
+        <div className="relative hidden w-1/2 lg:block">
+          <img 
+            src="https://images.unsplash.com/photo-1497215728101-856f4ea42174?q=80&w=2070&auto=format&fit=crop" 
+            className="h-full w-full object-cover" 
+            alt="Workspace"
+          />
+          {/* Overlay Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/40 to-purple-900/60 backdrop-blur-[1px]" />
+          
+          <div className="absolute bottom-12 left-12 right-12 rounded-[32px] border border-white/20 bg-white/10 p-8 text-white backdrop-blur-xl shadow-2xl">
+            <h3 className="text-2xl font-bold leading-tight">Focus on what matters, let us handle the flow.</h3>
+            <div className="mt-6 flex items-center gap-4">
+               <div className="flex -space-x-2">
+                 {[1,2,3].map(i => (
+                   <div key={i} className="h-8 w-8 rounded-full border-2 border-white bg-slate-200" />
+                 ))}
+               </div>
+               <p className="text-sm font-medium opacity-80">Joined by 10k+ users</p>
+            </div>
+          </div>
+        </div>
       </div>
-    </>
+    </div>
   );
 }
