@@ -18,3 +18,34 @@ body{
 *{
   box-sizing:border-box;
 }
+
+/* Ensure the editor text color matches your theme */
+.custom-editor .ProseMirror {
+  color: inherit;
+  outline: none;
+}
+
+/* Optional: styling for placeholders if you add them later */
+.custom-editor .ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: #adb5bd;
+  pointer-events: none;
+  height: 0;
+}
+
+/* Ensure lists look right */
+.custom-editor ul {
+  list-style-type: disc;
+  padding-left: 1.5rem;
+}
+
+.custom-editor ol {
+  list-style-type: decimal;
+  padding-left: 1.5rem;
+}
+
+.custom-editor .ProseMirror h1 {
+  font-size: 1.5rem;
+  font-weight: bold;
+}

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import API from "../services/api";
 import { Trash, Plus, Search } from "lucide-react";
 import toast from "react-hot-toast";
+import Editor from "../components/Editor";
 
 interface Note {
   _id: string;
@@ -47,7 +48,7 @@ function Navbar({ dark, onToggleDark }: { dark: boolean; onToggleDark: () => voi
         <span className="flex h-[30px] w-[30px] items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-pink-500 text-sm shadow-lg shadow-indigo-500/30">
           ✦
         </span>
-        Notely
+        NoteFlow
       </div>
 
       <div className="flex items-center gap-4">
@@ -77,6 +78,7 @@ export default function Dashboard() {
   const [debouncedNote, setDebouncedNote] = useState<Note | null>(null);
   const [search, setSearch] = useState("");
   const [dark, setDark] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
   const fetchNotes = async () => {
     const res = await API.get("/notes");
@@ -102,12 +104,15 @@ export default function Dashboard() {
     if (!debouncedNote) return;
     const timer = setTimeout(async () => {
       try {
+        setIsSaving(true);
         await API.put(`/notes/${debouncedNote._id}`, {
           title: debouncedNote.title,
           content: debouncedNote.content,
         });
+        setTimeout(() => setIsSaving(false), 2000);
       } catch (err) {
         console.error("Auto-save failed", err);
+        setIsSaving(false);
       }
     }, 500);
     return () => clearTimeout(timer);
@@ -207,13 +212,13 @@ export default function Dashboard() {
 
         {/* Editor Area */}
         <main className={`relative flex flex-1 flex-col p-8 transition-colors duration-300 backdrop-blur-sm ${dark ? "bg-white/[0.01]" : "bg-white/50"}`}>
-          {debouncedNote && (
+          {/* {isSaving && (
             <span className={`absolute top-4 right-6 rounded-full border px-2.5 py-0.5 text-[11px] font-medium transition-all ${
               dark ? "border-green-400/20 bg-green-400/10 text-green-400" : "border-green-600/20 bg-green-600/10 text-green-700"
             }`}>
               ● Saved
             </span>
-          )}
+          )} */}
 
           {activeNote ? (
             <div className="flex h-full flex-col gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -225,13 +230,14 @@ export default function Dashboard() {
                   dark ? "bg-white/[0.03] text-white focus:bg-white/[0.06]" : "bg-white/80 text-neutral-900 focus:bg-white shadow-sm"
                 }`}
               />
-              <textarea
-                placeholder="Start writing…"
-                value={activeNote.content}
-                onChange={(e) => handleChange("content", e.target.value)}
-                className={`w-full flex-1 resize-none rounded-2xl border-none bg-transparent px-5 py-5 text-sm leading-relaxed outline-none transition-all placeholder:text-neutral-500/30 ${
-                  dark ? "bg-white/[0.03] text-white focus:bg-white/[0.06]" : "bg-white/80 text-neutral-900 focus:bg-white shadow-sm"
-                }`}
+              <Editor
+                // placeholder="Start writing…"
+                content={activeNote.content}
+                onChange={(value) => handleChange("content", value)}
+                // className={`w-full flex-1 resize-none rounded-2xl border-none bg-transparent px-5 py-5 text-sm leading-relaxed outline-none transition-all placeholder:text-neutral-500/30 ${
+                //   dark ? "bg-white/[0.03] text-white focus:bg-white/[0.06]" : "bg-white/80 text-neutral-900 focus:bg-white shadow-sm"
+                // }`}
+                dark={dark}
               />
             </div>
           ) : (
