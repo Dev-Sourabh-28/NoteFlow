@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Lock, CheckCircle, ChevronRight } from "lucide-react";
+import { Lock, CheckCircle } from "lucide-react";
 import API from "../services/api";
 import toast from "react-hot-toast";
 
