@@ -85,7 +85,7 @@ export default function Login() {
                   <input type="checkbox" className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" />
                   Remember me
                 </label>
-                <a href="#" className="text-sm font-semibold text-indigo-600 hover:text-indigo-500">Forgot password?</a>
+                <a onClick={() => navigate("/forgot-password")} className="text-sm font-semibold text-indigo-600 hover:text-indigo-500">Forgot password?</a>
               </div>
             </div>
 
