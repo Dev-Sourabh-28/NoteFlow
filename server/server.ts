@@ -2,6 +2,7 @@ import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
 import dotenv from "dotenv";
+import { createProxyMiddleware } from "http-proxy-middleware";
 
 import authRoutes from "./routes/authRoutes";
 import noteRoutes from "./routes/noteRoutes";
@@ -9,6 +10,11 @@ import noteRoutes from "./routes/noteRoutes";
 dotenv.config();
 
 const app = express();
+
+app.use('/api/subnotes', createProxyMiddleware({
+  target: 'http://localhost:5001',
+  changeOrigin: true
+}));
 
 app.use(cors());
 app.use(express.json());
