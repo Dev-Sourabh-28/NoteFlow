@@ -23,7 +23,7 @@ export default function Login() {
     } catch (error: any) {
       alert(error.response?.data?.msg || "Error");
     } finally {
-      setLoading(false);
+      setLoading(true);
     }
   };
 
