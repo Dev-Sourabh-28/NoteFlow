@@ -46,10 +46,21 @@ export const login = async (req : Request, res : Response) => {
 export const forgotPassword = async(req: Request, res: Response) => {
     try {
         const {email} = req.body;
+        
+        // Validate email format
+        if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+            return res.status(400).json({msg: "Valid email is required"});
+        }
 
         const user = await User.findOne({email});
 
         if(!user) return res.status(400).json({msg : "User not found with this Email"});
+
+        // Check if email credentials are configured
+        if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+            console.error("Email credentials not configured");
+            return res.status(500).json({msg: "Email service not configured"});
+        }
 
         //Generate OTP 
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -67,6 +78,9 @@ export const forgotPassword = async(req: Request, res: Response) => {
             },
         });
 
+        // Verify transporter configuration
+        await transporter.verify();
+
         await transporter.sendMail({
             from: process.env.EMAIL_USER,
             to: email,
@@ -78,10 +92,9 @@ export const forgotPassword = async(req: Request, res: Response) => {
             msg: "OTP sent to email"
         });
     } catch (error) {
-
-        console.log(error);
+        console.error("Forgot password error:", error);
         res.status(500).json({
-            msg: "Server error",
+            msg: "Failed to send OTP. Please try again later.",
         });
     }
 }

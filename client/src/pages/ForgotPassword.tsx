@@ -11,13 +11,17 @@ export default function ForgotPassword() {
 
   const handleSubmit = async () => {
     if (!email) return toast.error("Please enter your email");
+    if (!/^\S+@\S+\.\S+$/.test(email)) return toast.error("Please enter a valid email");
+    
     try {
       setLoading(true);
       await API.post("auth/forgot-password", { email });
       toast.success("OTP sent to your email");
       navigate("/verify-otp", { state: { email } });
     } catch (error: any) {
-      toast.error(error.response?.data?.msg || "Something went wrong");
+      const errorMsg = error.response?.data?.msg || "Something went wrong";
+      toast.error(errorMsg);
+      console.error("Forgot password error:", error);
     } finally {
       setLoading(false);
     }
