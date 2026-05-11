@@ -19,8 +19,7 @@ interface Note {
 export default function Dashboard() {
     const [notes, setNotes] = useState<Note[]>([]);
     const [activeNote, setActiveNote] = useState<Note | null>(null);
-    const [debouncedNote, setDebouncedNote] = useState<Note | null>(null);
-    const [search, setSearch] = useState("");
+        const [search, setSearch] = useState("");
     const [dark, setDark] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -124,7 +123,6 @@ const [newSubnote, setNewSubnote] = useState<SubnoteTypes.CreateSubnoteDto>({
         }else if (activeNote){
             const updated = {...activeNote, [field]: value};
             setActiveNote(updated);
-            setDebouncedNote(updated);
         }
     };
 
