@@ -8,7 +8,7 @@ const API = axios.create({
 
 // For NestJS server (subnotes)
 const NEST_API = axios.create({
-  baseURL: import.meta.env.VITE_NEST_API_URL || "http://localhost:5000/api",
+  baseURL: import.meta.env.VITE_NEST_API_URL || "http://localhost:/5001api",
 });
 
 // Add interceptors to both
