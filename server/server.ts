@@ -13,7 +13,10 @@ const app = express();
 
 app.use('/api/subnotes', createProxyMiddleware({
   target: 'http://localhost:5001',
-  changeOrigin: true
+  changeOrigin: true,
+  pathRewrite: {
+    '^/': '/subnotes/'
+  }
 }));
 
 app.use(cors());

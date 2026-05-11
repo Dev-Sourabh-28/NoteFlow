@@ -4,6 +4,9 @@ import { Trash, Plus, Search } from "lucide-react";
 import toast from "react-hot-toast";
 import Editor from "../components/Editor";
 import Navbar from "../components/Navbar";
+import * as SubnoteTypes from "../types/subnote";
+import { subnoteAPI } from "../services/api";
+import { ChevronDown, ChevronRight, FileText } from "lucide-react";
 
 interface Note {
     _id: string;
@@ -11,66 +14,6 @@ interface Note {
     content: string;
 }
 
-// ─── Theme Toggle ───────────────────────────────────────────────────
-// function ThemeToggle({ dark, onToggle }: { dark: boolean; onToggle: () => void }) {
-//   return (
-//     <button
-//       onClick={onToggle}
-//       aria-label="Toggle theme"
-//       className={`relative flex h-7 w-14 shrink-0 items-center rounded-full border px-1 transition-all duration-300 backdrop-blur-md ${
-//         dark 
-//           ? "border-white/15 bg-indigo-500/25" 
-//           : "border-black/10 bg-amber-400/20"
-//       }`}
-//     >
-//       <span className={`absolute left-[7px] text-[10px] transition-opacity duration-300 ${dark ? "opacity-100" : "opacity-0"}`}>🌙</span>
-//       <span className={`absolute right-[7px] text-[10px] transition-opacity duration-300 ${dark ? "opacity-0" : "opacity-100"}`}>☀️</span>
-
-//       <div
-//         className={`z-10 flex h-5 w-5 items-center justify-center rounded-full text-[10px] transition-all duration-300 cubic-bezier(.34,1.56,.64,1) ${
-//           dark 
-//             ? "translate-x-[26px] bg-gradient-to-br from-indigo-500 to-purple-500 shadow-[0_2px_8px_rgba(99,102,241,0.5)]" 
-//             : "translate-x-0 bg-gradient-to-br from-amber-500 to-yellow-400 shadow-[0_2px_8px_rgba(251,191,36,0.6)]"
-//         }`}
-//       >
-//         {dark ? "🌙" : "☀️"}
-//       </div>
-//     </button>
-//   );
-// }
-
-// ─── Navbar ──────────────────────────────────────────────────────────
-// function Navbar({ dark, onToggleDark }: { dark: boolean; onToggleDark: () => void }) {
-//   return (
-//     <nav className={`sticky top-0 z-[100] flex h-[60px] shrink-0 items-center justify-between px-7 backdrop-blur-xl transition-colors duration-300 ${
-//       dark ? "border-b border-white/10 bg-[#0b0f1a]/70" : "border-b border-black/5 bg-white/60"
-//     }`}>
-//       <div className={`flex items-center gap-2.5 font-['Sora'] text-lg font-bold tracking-tight transition-colors ${dark ? "text-white" : "text-neutral-900"}`}>
-//         <span className="flex h-[30px] w-[30px] items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-pink-500 text-sm shadow-lg shadow-indigo-500/30">
-//           ✦
-//         </span>
-//         NoteFlow
-//       </div>
-
-//       <div className="flex items-center gap-4">
-//         <ThemeToggle dark={dark} onToggle={onToggleDark} />
-//         <button
-//           onClick={() => {
-//             localStorage.removeItem("token");
-//             window.location.href = "/";
-//           }}
-//           className={`rounded-xl border px-3.5 py-1.5 font-['Sora'] text-[13px] font-medium transition-all ${
-//             dark 
-//               ? "border-white/10 bg-white/5 text-white/70 hover:bg-white/10" 
-//               : "border-black/10 bg-black/5 text-neutral-600 hover:bg-black/10"
-//           }`}
-//         >
-//           Logout
-//         </button>
-//       </div>
-//     </nav>
-//   );
-// }
 
 // ─── Dashboard ───────────────────────────────────────────────────────
 export default function Dashboard() {
@@ -81,6 +24,85 @@ export default function Dashboard() {
     const [dark, setDark] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set());
+    const [showSubnoteForm, setShowSubnoteForm] = useState<string | null>(null);
+    const [subnotes, setSubnotes] = useState<Record<string, SubnoteTypes.Subnote[]>>({});
+    const [activeSubnote, setActiveSubnote] = useState<SubnoteTypes.Subnote | null>(null);
+const [newSubnote, setNewSubnote] = useState<SubnoteTypes.CreateSubnoteDto>({
+    title: "",
+    content: "",
+    noteId: ""
+});
+
+    const fetchSubnotes = async (noteId: string) => {
+        try {
+            const res = await subnoteAPI.getByNote(noteId);
+
+            const subnotesArray = Array.isArray(res.data.data) ? res.data.data : [];
+            setSubnotes(prev => ({
+                ...prev,
+                [noteId]: subnotesArray
+            }));
+        } catch (error) {
+            console.error("Failed to fetch subnotes", error);
+
+            setSubnotes(prev => ({
+                ...prev,
+                [noteId]: []
+            }));
+        }
+    };
+
+    const createSubnote = async (noteId: string) => {
+        try {
+            const res = await subnoteAPI.create({
+                ...newSubnote,
+                noteId
+            });
+
+            if(!subnotes[noteId]){
+                setSubnotes(prev => ({...prev, [noteId]: []}));
+            }
+
+            setSubnotes(prev => ({
+                ...prev,
+                [noteId]: [...(prev[noteId] || []), res.data.data]
+            }));
+
+            setNewSubnote({title: "", content: "", noteId: ""});
+            setShowSubnoteForm(null);
+            toast.success("Subnote created");
+        } catch (error) {
+            toast.error("Failed to create subnote");
+        }
+    };
+
+    const deleteSubnote = async(noteId: string, subnoteId: string) => {
+        try {
+            await subnoteAPI.delete(subnoteId);
+
+            setSubnotes(prev => ({
+                ...prev,
+                [noteId]: prev[noteId].filter(s => s._id !== subnoteId)
+            }));
+            toast.success("Subnote deleted");
+        } catch (error) {
+            toast.error("Failed to delete subnote");
+        }
+    };
+
+    const toggleNoteExpansion = (noteId: string) => {
+        const newExpanded = new Set(expandedNotes);
+
+        if(newExpanded.has(noteId)){
+            newExpanded.delete(noteId);
+        }else{
+            newExpanded.add(noteId);
+            fetchSubnotes(noteId);
+        }
+        setExpandedNotes(newExpanded);
+    }
+
 
     const fetchNotes = async () => {
         const res = await API.get("/notes");
@@ -96,34 +118,38 @@ export default function Dashboard() {
     };
 
     const handleChange = (field: "title" | "content", value: string) => {
-        if (!activeNote) return;
-        const updated = { ...activeNote, [field]: value };
-        setActiveNote(updated);
-        setDebouncedNote(updated);
+        if(activeSubnote){
+            const updated = {...activeSubnote, [field]: value};
+            setActiveSubnote(updated);
+        }else if (activeNote){
+            const updated = {...activeNote, [field]: value};
+            setActiveNote(updated);
+            setDebouncedNote(updated);
+        }
     };
 
     useEffect(() => {
-        if (!debouncedNote) return;
+        if (!activeSubnote) return;
         const timer = setTimeout(async () => {
             try {
-                setIsSaving(true);
-                await API.put(`/notes/${debouncedNote._id}`, {
-                    title: debouncedNote.title,
-                    content: debouncedNote.content,
-                });
-                setNotes(prevNotes => 
-                    prevNotes.map(note => 
-                        note._id === debouncedNote._id 
-                        ? { ...note, title: debouncedNote.title, content: debouncedNote.content } 
-                        : note));    
-                setTimeout(() => setIsSaving(false), 2000);
+                await subnoteAPI.update(activeSubnote._id, {
+                    title: activeSubnote.title,
+                    content: activeSubnote.content,
+                })
+                setSubnotes(prev => ({
+                    ...prev,
+                    [activeSubnote.noteId]: prev[activeSubnote.noteId].map(s => 
+                        s._id === activeSubnote._id ? activeSubnote : s
+                    )
+                }))
+
             } catch (err) {
                 console.error("Auto-save failed", err);
                 setIsSaving(false);
             }
         }, 500);
         return () => clearTimeout(timer);
-    }, [debouncedNote]);
+    }, [activeSubnote]);
 
     const deleteNote = async (id: string) => {
         if (!window.confirm("Delete this note?")) return;
@@ -202,32 +228,118 @@ export default function Dashboard() {
                                 No notes yet.<br />Create your first one ✦
                             </div>
                         )}
-                        {filteredNotes.map((note) => {
-                            const isActive = activeNote?._id === note._id;
-                            return (
-                                <div
-                                    key={note._id}
-                                    onClick={() => setActiveNote(note)}
-                                    className={`group flex items-center justify-between rounded-xl border p-3 cursor-pointer transition-all duration-200 ${isActive
-                                        ? "border-indigo-500/40 bg-gradient-to-br from-indigo-500/30 to-purple-500/20 shadow-inner backdrop-blur-md"
-                                        : `border-transparent ${dark ? "bg-white/[0.04] hover:bg-white/[0.08]" : "bg-black/[0.04] hover:bg-black/[0.07]"}`
-                                        }`}
+                       {filteredNotes.map((note) => {
+    const isActive = activeNote?._id === note._id;
+    const isExpanded = expandedNotes.has(note._id);
+    const noteSubnotes = Array.isArray(subnotes[note._id]) ? subnotes[note._id] : [];
+    
+    return (
+        <div key={note._id}>
+            <div
+                onClick={() => setActiveNote(note)}
+                className={`group flex items-center justify-between rounded-xl border p-3 cursor-pointer transition-all duration-200 ${isActive
+                    ? "border-indigo-500/40 bg-gradient-to-br from-indigo-500/30 to-purple-500/20 shadow-inner backdrop-blur-md"
+                    : `border-transparent ${dark ? "bg-white/[0.04] hover:bg-white/[0.08]" : "bg-black/[0.04] hover:bg-black/[0.07]"}`
+                    }`}
+            >
+                <div className="flex items-center gap-2 flex-1">
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            toggleNoteExpansion(note._id);
+                        }}
+                        className="p-1 hover:bg-white/10 rounded transition-colors"
+                    >
+                        {isExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+                    </button>
+                    <span className={`truncate text-[13px] font-medium transition-colors ${isActive ? "text-white" : ""}`}>
+                        {note.title || "Untitled"}
+                    </span>
+                </div>
+                <button
+                    className="opacity-0 transition-opacity group-hover:opacity-100 hover:scale-110"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        deleteNote(note._id);
+                    }}
+                >
+                    <Trash size={14} className="text-red-400" />
+                </button>
+            </div>
+            
+            {/* Subnotes Section */}
+            {isExpanded && (
+                <div className="ml-4 mt-1 space-y-1">
+                    <button
+                        onClick={() => setShowSubnoteForm(note._id)}
+                        className="w-full flex items-center gap-2 p-2 rounded-lg border border-dashed border-white/20 hover:border-white/40 transition-colors"
+                    >
+                        <Plus size={12} />
+                        <span className="text-xs opacity-60">Add subnote</span>
+                    </button>
+                    
+                    {showSubnoteForm === note._id && (
+                        <div className="p-2 rounded-lg bg-white/5 border border-white/10">
+                            <input
+                                placeholder="Subnote title..."
+                                value={newSubnote.title}
+                                onChange={(e) => setNewSubnote(prev => ({ ...prev, title: e.target.value }))}
+                                className="w-full p-2 rounded bg-white/10 text-xs mb-2"
+                            />
+                            <textarea
+                                placeholder="Subnote content..."
+                                value={newSubnote.content}
+                                onChange={(e) => setNewSubnote(prev => ({ ...prev, content: e.target.value }))}
+                                className="w-full p-2 rounded bg-white/10 text-xs mb-2 resize-none"
+                                rows={2}
+                            />
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => createSubnote(note._id)}
+                                    className="px-3 py-1 rounded bg-indigo-500 text-xs"
                                 >
-                                    <span className={`truncate text-[13px] font-medium transition-colors ${isActive ? "text-white" : ""}`}>
-                                        {note.title || "Untitled"}
-                                    </span>
-                                    <button
-                                        className="opacity-0 transition-opacity group-hover:opacity-100 hover:scale-110"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            deleteNote(note._id);
-                                        }}
-                                    >
-                                        <Trash size={14} className="text-red-400" />
-                                    </button>
-                                </div>
-                            );
-                        })}
+                                    Save
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setShowSubnoteForm(null);
+                                        setNewSubnote({ title: "", content: "", noteId: "" });
+                                    }}
+                                    className="px-3 py-1 rounded bg-white/10 text-xs"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                    
+                    {noteSubnotes.map((subnote, index) => (
+                        <div
+                            key={subnote._id || `subnote-${index}`}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveNote(null);
+                                setActiveSubnote(subnote);
+                            }}
+                            className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-colors group ${
+            activeSubnote?._id === subnote._id ? "bg-indigo-500/20" : "bg-white/[0.02] hover:bg-white/[0.05]"
+        }`}
+                        >
+                            <FileText size={12} className="opacity-40" />
+                            <span className="text-xs truncate flex-1">{subnote.title}</span>
+                            <button
+                                onClick={() => deleteSubnote(note._id, subnote._id)}
+                                className="opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                                <Trash size={10} className="text-red-400" />
+                            </button>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+})}
                     </div>
                 </aside>
 
@@ -247,18 +359,18 @@ export default function Dashboard() {
                         </span>
                     )}
 
-                    {activeNote ? (
+                    {activeNote || activeSubnote ? (
                         <div className="flex h-full flex-col gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
                             <input
                                 placeholder="Note title…"
-                                value={activeNote.title}
+                                value={activeNote?.title || activeSubnote?.title || ""}
                                 onChange={(e) => handleChange("title", e.target.value)}
                                 className={`w-full shrink-0 rounded-2xl border-none bg-transparent px-4 py-3 text-[24px] font-bold tracking-tight outline-none transition-all placeholder:text-neutral-500/30 ${dark ? "bg-white/[0.03] text-white focus:bg-white/[0.06]" : "bg-white/80 text-neutral-900 focus:bg-white shadow-sm"
                                     }`}
                             />
                             <Editor
                                 // placeholder="Start writing…"
-                                content={activeNote.content}
+                                content={activeNote?.content || activeSubnote?.content || ""}
                                 onChange={(value) => handleChange("content", value)}
                                 // className={`w-full flex-1 resize-none rounded-2xl border-none bg-transparent px-5 py-5 text-sm leading-relaxed outline-none transition-all placeholder:text-neutral-500/30 ${
                                 //   dark ? "bg-white/[0.03] text-white focus:bg-white/[0.06]" : "bg-white/80 text-neutral-900 focus:bg-white shadow-sm"
