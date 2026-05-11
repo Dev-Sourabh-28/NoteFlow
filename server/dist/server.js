@@ -7,10 +7,18 @@ const express_1 = __importDefault(require("express"));
 const mongoose_1 = __importDefault(require("mongoose"));
 const cors_1 = __importDefault(require("cors"));
 const dotenv_1 = __importDefault(require("dotenv"));
+const http_proxy_middleware_1 = require("http-proxy-middleware");
 const authRoutes_1 = __importDefault(require("./routes/authRoutes"));
 const noteRoutes_1 = __importDefault(require("./routes/noteRoutes"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
+app.use('/api/subnotes', (0, http_proxy_middleware_1.createProxyMiddleware)({
+    target: 'http://localhost:5001',
+    changeOrigin: true,
+    pathRewrite: {
+        '^/': '/subnotes/'
+    }
+}));
 app.use((0, cors_1.default)());
 app.use(express_1.default.json());
 app.use("/api/auth", authRoutes_1.default);
