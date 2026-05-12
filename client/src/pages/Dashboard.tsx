@@ -27,7 +27,7 @@ export default function Dashboard() {
     const [showSubnoteForm, setShowSubnoteForm] = useState<string | null>(null);
     const [subnotes, setSubnotes] = useState<Record<string, SubnoteTypes.Subnote[]>>({});
     const [activeSubnote, setActiveSubnote] = useState<SubnoteTypes.Subnote | null>(null);
-const [newSubnote, setNewSubnote] = useState<SubnoteTypes.CreateSubnoteDto>({
+    const [newSubnote, setNewSubnote] = useState<SubnoteTypes.CreateSubnoteDto>({
     title: "",
     content: "",
     noteId: ""
@@ -125,6 +125,9 @@ const [newSubnote, setNewSubnote] = useState<SubnoteTypes.CreateSubnoteDto>({
             setActiveNote(updated);
         }
     };
+
+    
+   
 
     useEffect(() => {
         if (!activeSubnote) return;
@@ -338,6 +341,7 @@ const [newSubnote, setNewSubnote] = useState<SubnoteTypes.CreateSubnoteDto>({
         </div>
     );
 })}
+
                     </div>
                 </aside>
 
@@ -347,6 +351,7 @@ const [newSubnote, setNewSubnote] = useState<SubnoteTypes.CreateSubnoteDto>({
                         onClick={() => setIsMobileMenuOpen(false)}
                     />
                 )}
+                
                 {/* Editor Area */}
                 <main className={`relative flex flex-1 flex-col p-3 sm:p-4 md:p-6 lg:p-8 transition-all duration-300 ${dark ? "bg-[#0b0f1a]/50" : "bg-white/50"
                     }`}>
@@ -366,6 +371,7 @@ const [newSubnote, setNewSubnote] = useState<SubnoteTypes.CreateSubnoteDto>({
                                 className={`w-full shrink-0 rounded-2xl border-none bg-transparent px-4 py-3 text-[24px] font-bold tracking-tight outline-none transition-all placeholder:text-neutral-500/30 ${dark ? "bg-white/[0.03] text-white focus:bg-white/[0.06]" : "bg-white/80 text-neutral-900 focus:bg-white shadow-sm"
                                     }`}
                             />
+                            
                             <Editor
                                 // placeholder="Start writing…"
                                 content={activeNote?.content || activeSubnote?.content || ""}
@@ -374,7 +380,9 @@ const [newSubnote, setNewSubnote] = useState<SubnoteTypes.CreateSubnoteDto>({
                                 //   dark ? "bg-white/[0.03] text-white focus:bg-white/[0.06]" : "bg-white/80 text-neutral-900 focus:bg-white shadow-sm"
                                 // }`}
                                 dark={dark}
+                                
                             />
+                            
                         </div>
                     ) : (
                         <div className="flex h-full flex-col items-center justify-center gap-3 opacity-30">

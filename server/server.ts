@@ -6,6 +6,7 @@ import { createProxyMiddleware } from "http-proxy-middleware";
 
 import authRoutes from "./routes/authRoutes";
 import noteRoutes from "./routes/noteRoutes";
+import aiRoute from "./routes/aiRoutes";
 
 dotenv.config();
 
@@ -21,6 +22,7 @@ app.use('/api/subnotes', createProxyMiddleware({
 
 app.use(cors());
 app.use(express.json());
+app.use("/api/ai", aiRoute);
 
 app.use("/api/auth", authRoutes);
 app.use("/api/notes", noteRoutes);

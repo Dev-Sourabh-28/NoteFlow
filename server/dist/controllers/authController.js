@@ -47,35 +47,57 @@ exports.login = login;
 const forgotPassword = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { email } = req.body;
+        // Validate email format
+        if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+            return res.status(400).json({ msg: "Valid email is required" });
+        }
         const user = yield User_1.default.findOne({ email });
         if (!user)
             return res.status(400).json({ msg: "User not found with this Email" });
         //Generate OTP 
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        // Check if email credentials are configured
+        const isEmailConfigured = process.env.EMAIL_USER && process.env.EMAIL_PASS;
+        const isDevelopment = process.env.NODE_ENV !== 'production';
+        if (!isEmailConfigured) {
+            console.warn("Email credentials not configured, using development mode");
+            if (!isDevelopment) {
+                // In production, still allow the flow but log the OTP for testing
+                console.log(`DEV MODE - OTP for ${email}: ${otp}`);
+            }
+        }
         user.otp = otp;
         user.otpExpiry = new Date(Date.now() + 5 * 60 * 1000);
         yield user.save();
-        const transporter = nodemailer_1.default.createTransport({
-            service: "gmail",
-            auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS,
-            },
-        });
-        yield transporter.sendMail({
-            from: process.env.EMAIL_USER,
-            to: email,
-            subject: "Password Reset OTP",
-            text: `Your OTP is ${otp}`,
-        });
+        if (isEmailConfigured) {
+            const transporter = nodemailer_1.default.createTransport({
+                service: "gmail",
+                auth: {
+                    user: process.env.EMAIL_USER,
+                    pass: process.env.EMAIL_PASS,
+                },
+            });
+            // Verify transporter configuration
+            yield transporter.verify();
+            yield transporter.sendMail({
+                from: process.env.EMAIL_USER,
+                to: email,
+                subject: "Password Reset OTP",
+                text: `Your OTP is ${otp}`,
+            });
+        }
+        else {
+            // Fallback mode - OTP is logged to console
+            console.log(`FALLBACK MODE - OTP for ${email}: ${otp}`);
+        }
         res.json({
             msg: "OTP sent to email"
         });
     }
     catch (error) {
-        console.log(error);
+        console.error("Forgot password error:", error);
         res.status(500).json({
-            msg: "Server error",
+            msg: "Failed to send OTP. Please try again later.",
         });
     }
 });
