@@ -127,7 +127,7 @@ export const verifyOtp = async(req: Request, res: Response) => {
         });
     }
 
-    res.json({msg: "OTP Verified"});
+    res.json({msg: "OTP verified"});
 }
 
 export const resetPassword = async(req: Request, res: Response) => {
