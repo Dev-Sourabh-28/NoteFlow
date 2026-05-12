@@ -111,9 +111,15 @@ export default function Dashboard() {
     useEffect(() => { fetchNotes(); }, []);
 
     const createNote = async () => {
-        const res = await API.post("/notes", {});
-        setNotes([res.data, ...notes]);
-        setActiveNote(res.data);
+        try {
+            const res = await API.post("/notes", {});
+            setNotes([res.data, ...notes]);
+            setActiveNote(res.data);
+            toast.success("Note created");
+        } catch (error) {
+            console.error("Failed to create note", error);
+            toast.error("Failed to create note");
+        }
     };
 
     const handleChange = (field: "title" | "content", value: string) => {
@@ -151,6 +157,24 @@ export default function Dashboard() {
         }, 500);
         return () => clearTimeout(timer);
     }, [activeSubnote]);
+
+    useEffect(() => {
+        if (!activeNote) return;
+        const timer = setTimeout(async () => {
+            try {
+                await API.put(`/notes/${activeNote._id}`, {
+                    title: activeNote.title,
+                    content: activeNote.content,
+                });
+                setNotes(prev => prev.map(note => 
+                    note._id === activeNote._id ? activeNote : note
+                ));
+            } catch (err) {
+                console.error("Auto-save failed", err);
+            }
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [activeNote]);
 
     const deleteNote = async (id: string) => {
         if (!window.confirm("Delete this note?")) return;
