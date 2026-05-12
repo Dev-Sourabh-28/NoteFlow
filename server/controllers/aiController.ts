@@ -16,6 +16,14 @@ export const correctGrammar = async (
       });
     }
 
+    // Check if API key is available
+    if (!process.env.GROQ_API_KEY) {
+      return res.status(500).json({
+        msg: "API key configuration error",
+        error: "GROQ_API_KEY environment variable is not set"
+      });
+    }
+
     const client = new OpenAI({
       apiKey: process.env.GROQ_API_KEY,
       baseURL: "https://api.groq.com/openai/v1",
@@ -45,11 +53,27 @@ export const correctGrammar = async (
     });
 
   } catch (error) {
-
-    console.log(error);
+    console.error("AI Controller Error:", error);
+    
+    // More specific error messages
+    if (error instanceof Error) {
+      if (error.message.includes('API key')) {
+        return res.status(500).json({
+          msg: "API key configuration error",
+          error: "Invalid or missing API key"
+        });
+      }
+      if (error.message.includes('quota') || error.message.includes('rate limit')) {
+        return res.status(429).json({
+          msg: "API quota exceeded",
+          error: "Rate limit reached"
+        });
+      }
+    }
 
     res.status(500).json({
-      msg: "AI Error",
+      msg: "AI service temporarily unavailable",
+      error: error instanceof Error ? error.message : "Unknown error"
     });
   }
 };
