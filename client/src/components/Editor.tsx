@@ -18,7 +18,6 @@ interface Props {
 export default function Editor({ content, onChange, dark }: Props) {
   const [showColors, setShowColors] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
-  const [activeNote, setActiveNote] = useState<any>(null);
 
   const editor = useEditor({
     extensions: [
