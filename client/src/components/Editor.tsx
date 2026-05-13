@@ -44,27 +44,41 @@ export default function Editor({ content, onChange, dark }: Props) {
     try {
       setAiLoading(true);
 
-      const text = editor.getText();
+      const {from, to} = editor.state.selection;
+
+      const selectedText = editor.state.doc.textBetween(
+        from,
+        to,
+        " "
+      );
+
+      const textToFix = selectedText || editor.getText();
 
       const res = await API.post(
         "/ai/correct-grammar",
         {
-          text,
+          text : textToFix,
         }
       );
 
+      const corrected = res.data.corrected;
+
+      if(selectedText){
+        editor
+        .chain()
+        .focus()
+        .insertContentAt(
+          {from, to},
+          corrected
+        )
+        .run();
+      } 
+      else{
+
       editor.commands.setContent(
-        res.data.corrected
+        corrected
       );
-
-      if (activeNote) {
-        const updated = {
-          ...activeNote,
-          content: res.data.corrected,
-        };
-
-        setActiveNote(updated);
-      }
+    }
       toast.success("Grammar corrected");
     } catch (error) {
       console.log(error);
