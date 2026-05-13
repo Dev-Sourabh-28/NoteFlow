@@ -12,8 +12,57 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteNote = exports.updateNote = exports.getNote = exports.createNote = void 0;
+exports.deleteNote = exports.updateNote = exports.getNote = exports.createNote = exports.getSharedNote = exports.shareNote = void 0;
 const Note_1 = __importDefault(require("../models/Note"));
+const uuid_1 = require("uuid");
+const shareNote = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { permission } = req.body;
+        const note = yield Note_1.default.findById(req.params.id);
+        if (!note) {
+            return res.status(404).json({
+                msg: "Note not found",
+            });
+        }
+        note.isShared = true;
+        note.sharePermission = permission;
+        if (!note.shareId) {
+            note.shareId = (0, uuid_1.v4)();
+        }
+        yield note.save();
+        res.json({
+            shareLink: `${process.env.CLIENT_URL}/shared/${note.shareId}`
+        });
+    }
+    catch (error) {
+        console.log(error);
+        res.status(500).json({
+            msg: "Share failed",
+        });
+    }
+});
+exports.shareNote = shareNote;
+const getSharedNote = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const note = yield Note_1.default.findOne({
+            shareId: req.params.shareId,
+            isShared: true,
+        });
+        if (!note) {
+            return res.status(404).json({
+                msg: "Note not found",
+            });
+        }
+        res.json(note);
+    }
+    catch (error) {
+        console.log(error);
+        res.status(500).json({
+            msg: "Server error",
+        });
+    }
+});
+exports.getSharedNote = getSharedNote;
 const createNote = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { title, content } = req.body;
     const note = yield Note_1.default.create({
@@ -31,7 +80,19 @@ const getNote = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 exports.getNote = getNote;
 const updateNote = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { title, content } = req.body;
-    const note = yield Note_1.default.findByIdAndUpdate(req.params.id, { title, content }, { new: true });
+    const note = yield Note_1.default.findById(req.params.id);
+    if (!note) {
+        return res.status(404).json({ msg: "Note not found" });
+    }
+    // Check if user is owner or has edit permission for shared note
+    if (note.userId !== req.user.id) {
+        if (!note.isShared || note.sharePermission !== "edit") {
+            return res.status(403).json({ msg: "Unauthorized" });
+        }
+    }
+    note.title = title;
+    note.content = content;
+    yield note.save();
     res.json(note);
 });
 exports.updateNote = updateNote;

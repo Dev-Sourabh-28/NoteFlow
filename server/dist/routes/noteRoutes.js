@@ -6,6 +6,8 @@ const auth_1 = require("../middleware/auth");
 const router = (0, express_1.Router)();
 router.post("/", auth_1.auth, notesController_1.createNote);
 router.get("/", auth_1.auth, notesController_1.getNote);
+router.post("/:id/share", auth_1.auth, notesController_1.shareNote);
+router.get("/shared/:shareId", notesController_1.getSharedNote);
 router.delete("/:id", auth_1.auth, notesController_1.deleteNote);
 console.log("Note DELETE route registered");
 router.put("/:id", auth_1.auth, notesController_1.updateNote);

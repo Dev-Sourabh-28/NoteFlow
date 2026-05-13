@@ -1,6 +1,70 @@
-import {Response} from 'express';
-import Note from "../models/Note";
+import { Request, Response } from "express";
+import Note, {INote} from "../models/Note";
 import { AuthRequest } from '../middleware/auth';
+import {v4 as uuidv4} from "uuid";
+
+export const shareNote = async(
+    req: AuthRequest,
+    res: Response
+) => {
+    try {
+        const {permission} = req.body;
+
+        const note = await Note.findById(req.params.id) as INote | null;
+
+        if(!note){
+            return res.status(404).json({
+                msg: "Note not found",
+            });
+        }
+
+        note.isShared = true;
+
+        note.sharePermission = permission;
+
+        if(!note.shareId){
+            note.shareId = uuidv4();
+        }
+
+        await note.save();
+
+        res.json({
+            shareLink:
+            `${process.env.CLIENT_URL}/shared/${note.shareId}`
+        })
+    } catch (error) {
+        console.log(error);
+
+        res.status(500).json({
+            msg: "Share failed",
+        })
+    }
+}
+
+export const getSharedNote = async(
+   req: Request,
+   res: Response
+) => {
+    try {
+        const note = await Note.findOne({
+            shareId: req.params.shareId,
+            isShared: true,
+        });
+
+        if(!note){
+            return res.status(404).json({
+                msg: "Note not found",
+            });
+        }
+
+        res.json(note);
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({
+            msg: "Server error",
+        });
+    }
+}
 
 export const createNote = async(req: AuthRequest, res: Response) => {
     const {title, content} = req.body;
@@ -21,11 +85,22 @@ export const getNote = async(req: AuthRequest, res: Response) => {
 export const updateNote = async(req: AuthRequest, res: Response) => {
     const {title, content} = req.body;
 
-    const note = await Note.findByIdAndUpdate(
-        req.params.id,
-        {title, content},
-        {new: true}
-    );
+    const note = await Note.findById(req.params.id) as INote | null;
+
+    if(!note){
+        return res.status(404).json({msg: "Note not found"});
+    }
+
+    // Check if user is owner or has edit permission for shared note
+    if(note.userId !== req.user.id){
+        if(!note.isShared || note.sharePermission !== "edit"){
+            return res.status(403).json({msg: "Unauthorized"});
+        }
+    }
+
+    note.title = title;
+    note.content = content;
+    await note.save();
 
     res.json(note);
 }

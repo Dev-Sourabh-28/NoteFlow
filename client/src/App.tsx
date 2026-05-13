@@ -5,6 +5,7 @@ import Dashboard from "./pages/Dashboard";
 import ForgotPassword from "./pages/ForgotPassword";
 import VerifyOtp from "./pages/verifyOtp";
 import ResetPassword from "./pages/ResetPassword";
+import SharedNote from "./pages/SharedNote";
 
 function App(){
   return(
@@ -16,6 +17,7 @@ function App(){
       <Route path="/forgot-password" element={<ForgotPassword/>}/>
       <Route path="/verify-otp" element={<VerifyOtp/>}/>
       <Route path="/reset-password" element={<ResetPassword/>}/>
+      <Route path="/shared/:shareId" element={<SharedNote/>}/>
     </Routes>
     </BrowserRouter>
   )

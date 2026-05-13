@@ -8,6 +8,19 @@ const noteSchema = new mongoose_1.default.Schema({
     userId: { type: String, required: true },
     title: String,
     content: String,
+    isShared: {
+        type: Boolean,
+        default: false,
+    },
+    sharePermission: {
+        type: String,
+        enum: ["read", "edit"],
+        default: "read",
+    },
+    shareId: {
+        type: String,
+        default: null,
+    },
 }, {
     timestamps: true
 });

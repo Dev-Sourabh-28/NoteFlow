@@ -1,7 +1,7 @@
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { useEffect, useState } from "react";
-import { Bold, Italic, List, Heading1, Underline as UnderlineIcon, ListOrdered, Palette, Brain } from "lucide-react";
+import { Bold, Italic, List, Heading1, Underline as UnderlineIcon, ListOrdered, Palette, Brain, Share2 } from "lucide-react";
 import { TextStyle } from "@tiptap/extension-text-style";
 import Color from "@tiptap/extension-color";
 import Underline from "@tiptap/extension-underline";
@@ -13,9 +13,10 @@ interface Props {
   content: string;
   onChange: (value: string) => void;
   dark: boolean;
+  activeNote?: { _id: string } | null;
 }
 
-export default function Editor({ content, onChange, dark }: Props) {
+export default function Editor({ content, onChange, dark, activeNote }: Props) {
   const [showColors, setShowColors] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
 
@@ -36,6 +37,44 @@ export default function Editor({ content, onChange, dark }: Props) {
       onChange(editor.getHTML());
     }
   })
+
+  const handleShare = async () => {
+    if(!activeNote) return;
+
+    const permission = window.prompt(
+      "Enter permission: read or edit"
+    );
+
+    if(
+      permission !== "read" && permission !== "edit"
+    ){
+      return toast.error(
+        "Invalid permission"
+      );
+    }
+
+    try {
+      const res = await API.post(
+        `/notes/${activeNote._id}/share`,
+        {
+          permission,
+        }
+      )
+
+      navigator.clipboard.writeText(
+        res.data.shareLink
+      );
+
+      toast.success(
+        "Share link copied"
+      );
+    } catch (error) {
+      console.log(error);
+      toast.error(
+        "Share failed"
+      );
+    }
+  };
 
   const handleAIFix = async () => {
     if (!editor) return;
@@ -201,6 +240,13 @@ export default function Editor({ content, onChange, dark }: Props) {
   >
     <Brain size={16} />
     {aiLoading ? "Fixing..." : "AI Fix"}
+  </button>
+
+  <button
+  onClick={handleShare}
+  className="px-3 py-2 flex items-center gap-2"
+  >
+    <Share2 size={16}/>
   </button>
 </div>
 
